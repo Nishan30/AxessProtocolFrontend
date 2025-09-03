@@ -1,6 +1,7 @@
 // File: src/app/page.tsx
 "use client";
 
+import { useWalletStore } from "@/lib/use-wallet-store";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import Link from 'next/link'; // Import Link for the "Become a Host" button
 import { useEffect, useState } from "react";
@@ -11,7 +12,7 @@ type AccountInfo = {
   publicKey: string;
 };
 
-// IMPORTANT: Make sure this is your latest deployed contract address
+// IMPORTANT: Replace this with your actual deployed contract address
 const CONTRACT_ADDRESS = "0xd144f994fb413c68308e64805774d17ec9703cb4e125dfe19e655ffe209d18b4";
 
 const aptosConfig = new AptosConfig({ network: Network.TESTNET });
@@ -19,7 +20,7 @@ const aptos = new Aptos(aptosConfig);
 
 // --- Component ---
 export default function Home() {
-  const [account, setAccount] = useState<AccountInfo | null>(null);
+  const { account, setAccount } = useWalletStore();
   const [walletDetected, setWalletDetected] = useState(false);
   const [listings, setListings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +32,7 @@ export default function Home() {
 
   // --- NEW STATE for the Rent Modal ---
   const [listingToRent, setListingToRent] = useState<any | null>(null);
-  const [rentalDuration, setRentalDuration] = useState(5); // Default 5 minutes
+  const [rentalDuration, setRentalDuration] = useState(10); // Default 10 minutes
   const [isRenting, setIsRenting] = useState(false); // For transaction loading state
 
   useEffect(() => {
@@ -148,6 +149,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24 bg-slate-900 text-white">
+      {/* Header and Wallet Button (no changes) */}
       <div className="w-full max-w-5xl flex justify-between items-center mb-12">
         <h1 className="text-2xl md:text-4xl font-bold">Aptos Compute Marketplace</h1>
         <div className="flex items-center gap-4">
@@ -172,6 +174,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* Main content area */}
       <div className="w-full max-w-4xl">
         <h2 className="text-2xl mb-4">Available Machines</h2>
         {error && <div className="mb-4 p-3 bg-red-700 rounded">Error: {error}</div>}
@@ -188,11 +191,14 @@ export default function Home() {
                     <strong>Available:</strong> {String(listing.is_available)}
                   </div>
                 </div>
+                {/* --- UPDATED BUTTONS for each listing --- */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button onClick={() => fetchListingDetail(listing.host_address, listing.id)} className="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-1 px-3 rounded">
+                  <button
+                    onClick={() => fetchListingDetail(listing.host_address, listing.id)}
+                    className="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-1 px-3 rounded"
+                  >
                     View
                   </button>
-                  {/* --- THE NEW RENT BUTTON --- */}
                   <button
                     onClick={() => setListingToRent(listing)}
                     disabled={!listing.is_available || !account}
@@ -203,6 +209,7 @@ export default function Home() {
                 </div>
               </div>
             ))}
+            {/* Load more button (no changes) */}
             {nextCursor !== null && (listings.length < (total ?? Infinity)) && (
               <div className="text-center">
                 <button disabled={loadingMore} onClick={() => loadListings(nextCursor, true)} className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded">
@@ -232,7 +239,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* --- THE NEW RENT MODAL --- */}
+      {/* --- NEW Rent Modal --- */}
       {listingToRent && (
         <div className="fixed inset-0 flex items-center justify-center p-6 z-30">
           <div className="absolute inset-0 bg-black opacity-60" onClick={() => !isRenting && setListingToRent(null)} />
@@ -241,7 +248,6 @@ export default function Home() {
             <div className="mb-4 text-sm">
               <p><strong>Host:</strong> <span className="font-mono">{listingToRent.host_address}</span></p>
               <p><strong>ID:</strong> {listingToRent.id}</p>
-              <p><strong>Price:</strong> {listingToRent.price_per_second} Octas/second</p>
             </div>
             <div className="mb-6">
               <label htmlFor="duration" className="block text-sm font-medium text-slate-300 mb-2">
