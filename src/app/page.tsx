@@ -6,14 +6,30 @@ import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import Link from 'next/link'; // Import Link for the "Become a Host" button
 import { useEffect, useState } from "react";
 
-// --- Types and Constants ---
+// --- UPDATED: Define a more specific type for our Listing data ---
+interface ReputationScore {
+    completed_jobs: number;
+    total_uptime_seconds: number;
+}
+
+interface Listing {
+    id: number;
+    host_address: string;
+    listing_type: string;
+    price_per_second: number;
+    is_available: boolean;
+    physical?: { gpu_model: string };
+    cloud?: { instance_type: string };
+    reputation?: ReputationScore; // Reputation is optional
+}
+
 type AccountInfo = {
   address: string;
   publicKey: string;
 };
 
 // IMPORTANT: Replace this with your actual deployed contract address
-const CONTRACT_ADDRESS = "0xd144f994fb413c68308e64805774d17ec9703cb4e125dfe19e655ffe209d18b4";
+const CONTRACT_ADDRESS = "0x13a2c0f46951e8462d6147bccacf163a61b4cb03b4e44f179d4621fd2468ca0a";
 
 const aptosConfig = new AptosConfig({ network: Network.TESTNET });
 const aptos = new Aptos(aptosConfig);
@@ -22,7 +38,7 @@ const aptos = new Aptos(aptosConfig);
 export default function Home() {
   const { account, setAccount } = useWalletStore();
   const [walletDetected, setWalletDetected] = useState(false);
-  const [listings, setListings] = useState<any[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,25 +84,42 @@ export default function Home() {
   }, []);
 
   async function loadListings(cursor: number | null = null, append = false) {
-    // ... (this function is correct, no changes needed)
     try {
-      if (cursor) setLoadingMore(true);
-      else setIsLoading(true);
-      const limit = 20;
-      const url = `${API_BASE}/listings?limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setNextCursor(data.next_cursor ?? null);
-      setTotal(typeof data.total === "number" ? data.total : null);
-      if (append) setListings((s) => [...s, ...(data.items ?? [])]);
-      else setListings(data.items ?? []);
+        if (cursor) setLoadingMore(true);
+        else setIsLoading(true);
+        const limit = 20;
+        const url = `${API_BASE}/listings?limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        // --- NEW: Enrich each listing with its reputation score ---
+        const listingsWithReputation = await Promise.all(
+            (data.items ?? []).map(async (listing: Listing) => {
+                try {
+                    const repRes = await fetch(`${API_BASE}/reputation/${listing.host_address}`);
+                    if (repRes.ok) {
+                        const reputation = await repRes.json();
+                        // Only add reputation if it's not null
+                        if (reputation) {
+                           return { ...listing, reputation };
+                        }
+                    }
+                } catch (e) { console.error(`Failed to fetch reputation for ${listing.host_address}`, e); }
+                return listing; // Return original listing if reputation fetch fails or is null
+            })
+        );
+        
+        setNextCursor(data.next_cursor ?? null);
+        setTotal(typeof data.total === "number" ? data.total : null);
+        if (append) setListings((s) => [...s, ...listingsWithReputation]);
+        else setListings(listingsWithReputation);
     } catch (err: any) {
-      console.error("Failed to fetch listings:", err);
-      setError(err?.message ?? String(err));
+        console.error("Failed to fetch listings:", err);
+        setError(err?.message ?? String(err));
     } finally {
-      setIsLoading(false);
-      setLoadingMore(false);
+        setIsLoading(false);
+        setLoadingMore(false);
     }
   }
 
@@ -133,12 +166,17 @@ export default function Home() {
     };
 
     try {
-      // Use the window.petra object to sign and submit
+      // The flow is now much simpler. We just submit and wait.
       const response = await window.petra.signAndSubmitTransaction(payload);
       await aptos.waitForTransaction({ transactionHash: response.hash });
+      
+      // --- NO MORE localStorage LOGIC ---
+      // The on-chain contract handles remembering the job for us.
+      
       alert(`Rental successful! Transaction: ${response.hash}`);
       setListingToRent(null); // Close modal on success
       loadListings(); // Refresh the list to show the new state
+
     } catch (err: any) {
       console.error("Rental failed:", err);
       setError(err?.message ?? "An unknown error occurred during the transaction.");
@@ -190,6 +228,14 @@ export default function Home() {
                   <div className={listing.is_available ? 'text-green-400' : 'text-red-400'}>
                     <strong>Available:</strong> {String(listing.is_available)}
                   </div>
+                  {/* --- NEW: Display Reputation --- */}
+                  {listing.reputation && (
+                    <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-700">
+                        <span className="font-semibold">Host Reputation:</span>
+                        <span className="ml-2">✅ {listing.reputation.completed_jobs} Jobs</span>
+                        <span className="ml-3">⏱️ {Math.round(listing.reputation.total_uptime_seconds / 60)} min Uptime</span>
+                    </div>
+                  )}
                 </div>
                 {/* --- UPDATED BUTTONS for each listing --- */}
                 <div className="flex items-center gap-2 flex-shrink-0">

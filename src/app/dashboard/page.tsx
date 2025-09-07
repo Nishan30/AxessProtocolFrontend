@@ -15,7 +15,7 @@ interface Job {
   job_id: number;
   host_address: string;
   listing_id: number;
-  is_active: boolean; // Assuming you've added this from our last discussion
+  is_active: boolean; 
 }
 
 interface GpuStats {
@@ -75,7 +75,8 @@ const RenterDashboard = () => {
             const fetchRenterJobs = async () => {
                 setIsLoading(true);
                 try {
-                    // Just one single, clean API call to your new endpoint!
+                    // This is the single, clean API call to your backend,
+                    // which in turn calls the on-chain view function.
                     const res = await fetch(`${API_BASE}/renters/${account.address}/jobs`);
                     
                     if (!res.ok) {
