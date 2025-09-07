@@ -18,8 +18,7 @@ interface Job {
 }
 
 interface SessionDetails {
-    host_ip: string;
-    port: number;
+    public_url: string; // Changed from host_ip and port
     token: string;
 }
 
@@ -183,22 +182,27 @@ const RenterDashboard = () => {
 
                             {sessionDetails[job.job_id] && (
                                 <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                                    <h3 className="font-semibold">Session Ready!</h3>
+                                    <h3 className="font-semibold text-lg">Session Ready!</h3>
+                                    
+                                    {/* The token is still displayed for copy-pasting */}
                                     <p className="font-mono text-sm mt-2">
-                                        Jupyter URL: 
-                                        <span className="text-cyan-400 ml-2">
-                                            http://{sessionDetails[job.job_id]?.host_ip}:{sessionDetails[job.job_id]?.port}
-                                        </span>
-                                    </p>
-                                    <p className="font-mono text-sm mt-1">
-                                        Token:
-                                        <span className="text-cyan-400 ml-2">
+                                        Session Token:
+                                        <span className="text-cyan-400 ml-2 bg-gray-700 px-2 py-1 rounded">
                                             {sessionDetails[job.job_id]?.token}
                                         </span>
                                     </p>
-                                    <p className="text-xs text-yellow-400 mt-4">
-                                        Warning: This directly exposes the host's IP. A secure proxy will be added in Week 7.
-                                    </p>
+
+                                    {/* --- NEW: A clean, clickable link to the secure notebook --- */}
+                                    <a 
+                                        href={sessionDetails[job.job_id]?.public_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="mt-4 inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                                    >
+                                        Launch AI Notebook
+                                    </a>
+
+                                    {/* The old warning is no longer needed, as the IP is now hidden */}
                                 </div>
                             )}
                         </div>
