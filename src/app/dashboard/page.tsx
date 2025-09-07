@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useWalletStore } from '@/lib/use-wallet-store';
 import Link from 'next/link';
+import SessionStats from '@/components/SessionStats';
 
 // --- Types ---
 interface AccountInfo {
@@ -17,9 +18,17 @@ interface Job {
   is_active: boolean; // Assuming you've added this from our last discussion
 }
 
+interface GpuStats {
+    gpu_utilization_percent: number;
+    memory_used_mb: number;
+    memory_total_mb: number;
+}
+
+// --- UPDATED Type Definition ---
 interface SessionDetails {
-    public_url: string; // Changed from host_ip and port
+    public_url: string;
     token: string;
+    stats: GpuStats | null; // Stats can be null initially
 }
 
 const RenterDashboard = () => {
@@ -91,18 +100,27 @@ const RenterDashboard = () => {
         }
     }, [account, API_BASE]);
 
+    const [pollingIntervals, setPollingIntervals] = useState<Record<number, NodeJS.Timeout>>({});
+
+    // --- UPDATED: handleStartJob now starts a persistent poll ---
     const handleStartJob = async (jobId: number) => {
         try {
             await fetch(`${API_BASE}/jobs/${jobId}/start`, { method: 'POST' });
-            alert("Start command issued! Polling for session details...");
+            alert("Start command issued! Waiting for session to become ready...");
+
             const interval = setInterval(async () => {
                 const res = await fetch(`${API_BASE}/jobs/${jobId}/session`);
                 if (res.ok) {
                     const data: SessionDetails = await res.json();
                     setSessionDetails(prev => ({ ...prev, [jobId]: data }));
-                    clearInterval(interval);
+                    // Unlike before, we DON'T clear the interval here.
+                    // If the session is ready, the polling will now fetch live stats.
                 }
-            }, 3000);
+            }, 5000); // Poll every 5 seconds
+
+            // Store the interval ID so we can stop it later
+            setPollingIntervals(prev => ({ ...prev, [jobId]: interval }));
+
         } catch (error) {
             console.error("Failed to start job:", error);
             alert("Failed to issue start command.");
@@ -111,6 +129,9 @@ const RenterDashboard = () => {
 
     const handleStopJob = async (jobId: number) => {
         if (!confirm(`Are you sure you want to stop job ${jobId}?`)) return;
+        if (pollingIntervals[jobId]) {
+            clearInterval(pollingIntervals[jobId]);
+        }
         try {
             const response = await fetch(`${API_BASE}/jobs/${jobId}/stop`, { method: 'POST' });
             if (!response.ok) {
@@ -128,6 +149,12 @@ const RenterDashboard = () => {
             alert(`Failed to issue stop command: ${error}`);
         }
     };
+
+    useEffect(() => {
+        return () => {
+            Object.values(pollingIntervals).forEach(clearInterval);
+        };
+    }, [pollingIntervals]);
 
     return (
         <main className="container mx-auto p-8">
@@ -183,26 +210,20 @@ const RenterDashboard = () => {
                             {sessionDetails[job.job_id] && (
                                 <div className="mt-4 p-4 bg-gray-900 rounded-lg">
                                     <h3 className="font-semibold text-lg">Session Ready!</h3>
-                                    
-                                    {/* The token is still displayed for copy-pasting */}
-                                    <p className="font-mono text-sm mt-2">
-                                        Session Token:
-                                        <span className="text-cyan-400 ml-2 bg-gray-700 px-2 py-1 rounded">
-                                            {sessionDetails[job.job_id]?.token}
-                                        </span>
+                                    <p className="font-mono text-sm mt-1 text-gray-400">
+                                        Token: {sessionDetails[job.job_id]?.token}
                                     </p>
-
-                                    {/* --- NEW: A clean, clickable link to the secure notebook --- */}
                                     <a 
                                         href={sessionDetails[job.job_id]?.public_url} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="mt-4 inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                                        className="mt-4 inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded"
                                     >
                                         Launch AI Notebook
                                     </a>
-
-                                    {/* The old warning is no longer needed, as the IP is now hidden */}
+                                    
+                                    {/* --- NEW: Display the live stats --- */}
+                                    <SessionStats stats={sessionDetails[job.job_id]?.stats ?? null} />
                                 </div>
                             )}
                         </div>
