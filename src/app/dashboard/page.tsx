@@ -157,6 +157,9 @@ const RenterDashboard = () => {
         };
     }, [pollingIntervals]);
 
+    const activeJobs = jobs.filter(job => job.is_active);
+    const completedJobs = jobs.filter(job => !job.is_active);
+
     return (
         <main className="container mx-auto p-8">
             {/* --- 4. ADDED: Header with wallet button and consistent layout --- */}
@@ -185,53 +188,61 @@ const RenterDashboard = () => {
                     <p className="text-slate-400">Please connect your wallet to view your active and past rentals.</p>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {isLoading ? <p>Loading rentals...</p> : jobs.map(job => (
-                        <div key={job.job_id} className="bg-gray-800 p-4 rounded-lg">
-                            <h2 className="font-bold text-lg">Job ID: {job.job_id}</h2>
-                            <p className="font-mono text-sm">Host: {job.host_address}</p>
-
-                            <div className="mt-4 flex gap-4">
-                                <button 
-                                    onClick={() => handleStartJob(job.job_id)}
-                                    disabled={!!sessionDetails[job.job_id]} 
-                                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500 disabled:cursor-not-allowed"
-                                >
-                                    {sessionDetails[job.job_id] ? 'Running' : 'Start Session'}
-                                </button>
-                                <button 
-                                    onClick={() => handleStopJob(job.job_id)}
-                                    disabled={!sessionDetails[job.job_id]} 
-                                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500 disabled:cursor-not-allowed"
-                                >
-                                    Stop Session
-                                </button>
+                <div>
+                    {/* --- Active Rentals Section --- */}
+                    {/* This section now ONLY maps over the `activeJobs` array. */}
+                    <div>
+                        <h2 className="text-2xl font-semibold mb-4 border-b border-gray-600 pb-2">Active Rentals</h2>
+                        {isLoading ? <p>Loading...</p> : activeJobs.length > 0 ? (
+                            <div className="space-y-4">
+                                {activeJobs.map(job => (
+                                    <div key={job.job_id} className="bg-gray-800 p-4 rounded-lg">
+                                        <h2 className="font-bold text-lg">Job ID: {job.job_id}</h2>
+                                        <p className="font-mono text-sm">Host: {job.host_address}</p>
+                                        <div className="mt-4 flex gap-4">
+                                            {/* All the buttons for starting/stopping sessions go here */}
+                                            <button onClick={() => handleStartJob(job.job_id)} disabled={!!sessionDetails[job.job_id]} className="...">
+                                                {sessionDetails[job.job_id] ? 'Running' : 'Start Session'}
+                                            </button>
+                                            <button onClick={() => handleStopJob(job.job_id)} disabled={!sessionDetails[job.job_id]} className="...">
+                                                Stop Session
+                                            </button>
+                                        </div>
+                                        {sessionDetails[job.job_id] && (
+                                            <div className="mt-4 p-4 bg-gray-900 rounded-lg">
+                                                {/* ... JSX for session details ... */}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
+                        ) : (
+                            <p className="text-gray-400">You have no active rentals.</p>
+                        )}
+                    </div>
 
-                            {sessionDetails[job.job_id] && (
-                                <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                                    <h3 className="font-semibold text-lg">Session Ready!</h3>
-                                    <p className="font-mono text-sm mt-1 text-gray-400">
-                                        Token: {sessionDetails[job.job_id]?.token}
-                                    </p>
-                                    <a 
-                                        href={sessionDetails[job.job_id]?.public_url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="mt-4 inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        Launch AI Notebook
-                                    </a>
-                                    
-                                    {/* --- NEW: Display the live stats --- */}
-                                    <SessionStats stats={sessionDetails[job.job_id]?.stats ?? null} />
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                    {jobs.length === 0 && !isLoading && (
-                        <p className="text-gray-400">You have no active rentals.</p>
-                    )}
+                    {/* --- Rental History Section --- */}
+                    {/* This new section ONLY maps over the `completedJobs` array. */}
+                    <div className="mt-12">
+                        <h2 className="text-2xl font-semibold mb-4 border-b border-gray-600 pb-2">Rental History</h2>
+                         {isLoading ? <p>Loading...</p> : completedJobs.length > 0 ? (
+                            <div className="space-y-3">
+                                {completedJobs.map(job => (
+                                     <div key={job.job_id} className="bg-gray-900/50 p-3 rounded-lg flex justify-between items-center">
+                                         <div>
+                                            <h3 className="font-semibold">Job ID: {job.job_id}</h3>
+                                            <p className="font-mono text-xs text-gray-500">Host: {job.host_address}</p>
+                                         </div>
+                                         <span className="bg-gray-700 text-gray-300 text-xs font-semibold px-3 py-1 rounded-full">
+                                             Completed
+                                         </span>
+                                     </div>
+                                ))}
+                            </div>
+                         ) : (
+                            <p className="text-gray-400">You have no past rentals.</p>
+                         )}
+                    </div>
                 </div>
             )}
         </main>
