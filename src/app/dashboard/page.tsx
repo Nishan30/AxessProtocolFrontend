@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useWalletStore } from '@/lib/use-wallet-store';
 import Link from 'next/link';
 import SessionStats from '@/components/SessionStats';
+import BillingMetrics from '@/components/BillingMetrics'; 
 
 // --- Types ---
 interface AccountInfo {
@@ -29,6 +30,9 @@ interface SessionDetails {
     public_url: string;
     token: string;
     stats: GpuStats | null; // Stats can be null initially
+    price_per_second: number;
+    uptime_seconds: number;
+    current_cost_octas: number;
 }
 
 const RenterDashboard = () => {
@@ -210,7 +214,27 @@ const RenterDashboard = () => {
                                         </div>
                                         {sessionDetails[job.job_id] && (
                                             <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                                                {/* ... JSX for session details ... */}
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="font-semibold text-lg">Session Ready!</h3>
+                                                    <a 
+                                                        href={sessionDetails[job.job_id]?.public_url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded"
+                                                    >
+                                                        Launch AI Notebook
+                                                    </a>
+                                                </div>
+                                                
+                                                {/* The live hardware stats from Week 8 */}
+                                                <SessionStats stats={sessionDetails[job.job_id]?.stats ?? null} />
+                                                
+                                                {/* --- NEW: The live billing metrics --- */}
+                                                <BillingMetrics 
+                                                    price_per_second={sessionDetails[job.job_id]?.price_per_second}
+                                                    uptime_seconds={sessionDetails[job.job_id]?.uptime_seconds}
+                                                    current_cost_octas={sessionDetails[job.job_id]?.current_cost_octas}
+                                                />
                                             </div>
                                         )}
                                     </div>
