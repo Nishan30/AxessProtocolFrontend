@@ -5,6 +5,7 @@ import { useWalletStore } from "@/lib/use-wallet-store";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import Link from 'next/link'; // Import Link for the "Become a Host" button
 import { useEffect, useState } from "react";
+import TransactionStatus, { TransactionState } from '@/components/TransactionStatus';
 
 // --- UPDATED: Define a more specific type for our Listing data ---
 interface ReputationScore {
@@ -45,7 +46,7 @@ export default function Home() {
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
-
+  const [transactionState, setTransactionState] = useState<TransactionState>({ status: 'idle' });
   // --- NEW STATE for the Rent Modal ---
   const [listingToRent, setListingToRent] = useState<any | null>(null);
   const [rentalDuration, setRentalDuration] = useState(10); // Default 10 minutes
@@ -151,6 +152,7 @@ export default function Home() {
     }
 
     setIsRenting(true);
+    setTransactionState({ status: 'processing' });
     setError(null);
 
     const durationInSeconds = rentalDuration * 60;
@@ -172,7 +174,8 @@ export default function Home() {
       
       // --- NO MORE localStorage LOGIC ---
       // The on-chain contract handles remembering the job for us.
-      
+      setTransactionState({ status: 'success', hash: response.hash });
+
       alert(`Rental successful! Transaction: ${response.hash}`);
       setListingToRent(null); // Close modal on success
       loadListings(); // Refresh the list to show the new state
@@ -180,6 +183,7 @@ export default function Home() {
     } catch (err: any) {
       console.error("Rental failed:", err);
       setError(err?.message ?? "An unknown error occurred during the transaction.");
+      setTransactionState({ status: 'error', message: err.message });
     } finally {
       setIsRenting(false);
     }
@@ -189,6 +193,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24 bg-slate-900 text-white">
       {/* Header and Wallet Button (no changes) */}
       <div className="w-full max-w-5xl flex justify-between items-center mb-12">
+        <TransactionStatus state={transactionState} onClear={() => setTransactionState({ status: 'idle' })} />
         <h1 className="text-2xl md:text-4xl font-bold">Aptos Compute Marketplace</h1>
         <div className="flex items-center gap-4">
           <Link href="/host" className="text-cyan-400 hover:text-cyan-300 font-semibold">
