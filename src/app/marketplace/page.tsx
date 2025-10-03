@@ -1,4 +1,9 @@
 "use client"
+type PetraWallet = {
+  signAndSubmitTransaction: (payload: unknown) => Promise<{ hash: string }>;
+};
+
+// Petra wallet type declaration is defined globally in src/types/petra.d.ts
 
 import { useWalletStore } from "@/lib/use-wallet-store"
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk"
@@ -47,11 +52,7 @@ interface Listing {
   reputation?: ReputationScore
 }
 
-// --- Defines the shape of the wallet account info ---
-type AccountInfo = {
-  address: string
-  publicKey: string
-}
+
 
 // --- CONFIGURATION ---
 const CONTRACT_ADDRESS =
@@ -91,7 +92,7 @@ export default function MarketplacePage() {
     try {
       const walletAccount = await window.petra.connect()
       setAccount(walletAccount)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to connect wallet:", err)
       setAccount(null)
     }
@@ -134,14 +135,19 @@ export default function MarketplacePage() {
       )
 
       setListings(listingsWithReputation)
-    } catch (err: any) {
-      setError(err.message ?? "An unknown error occurred.")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   // Effect to load listings when the component mounts
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadListings()
   }, [])
@@ -169,7 +175,7 @@ export default function MarketplacePage() {
     }
 
     try {
-      const response = await window.petra.signAndSubmitTransaction(payload)
+  const response = await (window.petra as unknown as PetraWallet).signAndSubmitTransaction(payload)
       await aptos.waitForTransaction({ transactionHash: response.hash })
 
       setTransactionState({ status: "success", hash: response.hash })
@@ -177,9 +183,13 @@ export default function MarketplacePage() {
       setListingToRent(null)
       // Refresh the list to show the new "is_rented" status
       loadListings()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Rental failed:", err)
-      setTransactionState({ status: "error", message: err.message })
+      if (err instanceof Error) {
+        setTransactionState({ status: "error", message: err.message })
+      } else {
+        setTransactionState({ status: "error", message: "Unknown error" })
+      }
     } finally {
       setIsRenting(false)
       setTimeout(() => setTransactionState({ status: "idle" }), 10000)

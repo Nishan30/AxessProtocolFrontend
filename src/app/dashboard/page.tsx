@@ -18,12 +18,6 @@ import {
   Server,
 } from "lucide-react"
 
-// TS helper for Petra
-declare global {
-  interface Window {
-    petra?: any
-  }
-}
 
 // --- Types ---
 interface Job {
@@ -429,7 +423,7 @@ const RenterDashboard = () => {
                     <Server className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">No Active Rentals</h3>
-                  <p className="text-muted-foreground mb-6">You don't have any active GPU rentals at the moment.</p>
+                  <p className="text-muted-foreground mb-6">You don&apos;t have any active GPU rentals at the moment.</p>
                   <Link
                     href="/marketplace"
                     className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold px-6 py-2.5 rounded-lg transition-all shadow-lg shadow-primary/25"
@@ -486,7 +480,7 @@ const RenterDashboard = () => {
                     <Clock className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">No Rental History</h3>
-                  <p className="text-muted-foreground">You haven't completed any GPU rentals yet.</p>
+                  <p className="text-muted-foreground">You haven&apos;t completed any GPU rentals yet.</p>
                 </div>
               )}
             </div>

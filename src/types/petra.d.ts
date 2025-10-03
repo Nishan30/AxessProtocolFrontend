@@ -13,7 +13,7 @@ declare global {
             connect: () => Promise<PetraAccount>;
             disconnect?: () => Promise<void>;
             // allow any additional methods the extension may expose
-            [key: string]: any;
+            [key: string]: unknown;
         };
     }
 }

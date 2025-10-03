@@ -6,10 +6,6 @@ import { useWalletStore } from "@/lib/use-wallet-store"
 import { Server, Cpu, HardDrive, Zap, Copy, Check, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-interface AccountInfo {
-  address: string
-  publicKey: string
-}
 
 interface HostListing {
   id: number
@@ -53,7 +49,7 @@ const HostDashboard = () => {
     try {
       const walletAccount = await window.petra.connect()
       setAccount(walletAccount)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to connect wallet:", err)
       setAccount(null)
     }
@@ -79,9 +75,13 @@ const HostDashboard = () => {
           }
           const data: HostListing[] = await response.json()
           setListings(data)
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Failed to fetch host listings:", err)
-          setError(err.message)
+          if (err instanceof Error) {
+            setError(err.message)
+          } else {
+            setError("Unknown error")
+          }
           setListings([])
         } finally {
           setIsLoading(false)

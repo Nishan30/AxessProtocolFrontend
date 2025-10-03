@@ -352,7 +352,7 @@ function DeveloperGuide() {
       <section>
         <h3 className="text-2xl font-bold mb-6">Example: A dApp Requesting Off-Chain Computation</h3>
         <p className="text-muted-foreground mb-6 leading-relaxed">
-          Imagine you have a dApp that needs to run a complex analysis on some data. Your dApp's smart contract can call
+          Imagine you have a dApp that needs to run a complex analysis on some data. Your dApp&apos;s smart contract can call
           our protocol to get the work done.
         </p>
 

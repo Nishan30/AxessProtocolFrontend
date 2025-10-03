@@ -26,7 +26,7 @@ export default function HomePage() {
     try {
       const walletAccount = await window.petra.connect()
       setAccount(walletAccount)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to connect wallet:", err)
       setAccount(null)
     }
@@ -123,9 +123,10 @@ export default function HomePage() {
               Decentralized GPU Cloud for <span className="text-gradient">AI & Compute</span>
             </h1>
 
-            <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto text-balance leading-relaxed">
-              Access a global network of GPU providers for machine learning, rendering, and scientific computing.
-              Trustless, transparent, and powered by blockchain.
+              <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto text-balance leading-relaxed">
+                Access a global network of GPU providers for machine learning, rendering, and scientific computing.
+                Trustless, transparent, and powered by blockchain.
+                You haven&apos;t created any projects yet.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -271,7 +272,7 @@ export default function HomePage() {
             <div className="max-w-2xl mx-auto text-center relative z-10">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Get Early Access</h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                We're currently in closed beta on Aptos Testnet. Sign up to get notified about our mainnet launch, new
+                We&apos;re currently in closed beta on Aptos Testnet. Sign up to get notified about our mainnet launch, new
                 features, and developer incentives.
               </p>
 
