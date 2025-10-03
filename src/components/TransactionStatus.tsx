@@ -1,53 +1,77 @@
-import { FC } from 'react';
+"use client"
 
-// Define the shape of the state this component will receive
+import type { FC } from "react"
+import { CheckCircle2, XCircle, Loader2, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
 export interface TransactionState {
-    status: 'idle' | 'processing' | 'success' | 'error';
-    hash?: string;
-    message?: string;
+  status: "idle" | "processing" | "success" | "error"
+  hash?: string
+  message?: string
 }
 
 interface TransactionStatusProps {
-    state: TransactionState;
-    onClear: () => void;
+  state: TransactionState
+  onClear: () => void
 }
 
-const TransactionStatus: FC<TransactionStatusProps> = ({ state, onClear }) => {
-    if (state.status === 'idle') {
-        return null;
-    }
+export const TransactionStatus: FC<TransactionStatusProps> = ({ state, onClear }) => {
+  if (state.status === "idle") {
+    return null
+  }
 
-    const baseClasses = "p-4 rounded-lg text-white mb-4 text-center";
-    const statusClasses = {
-        processing: "bg-blue-500/30 border border-blue-400",
-        success: "bg-green-500/30 border border-green-400",
-        error: "bg-red-500/30 border border-red-400",
-    };
+  const explorerUrl = `https://explorer.aptoslabs.com/txn/${state.hash}?network=testnet`
 
-    const explorerUrl = `https://explorer.aptoslabs.com/txn/${state.hash}?network=testnet`;
-
-    return (
-        <div className={`${baseClasses} ${statusClasses[state.status]}`}>
-            {state.status === 'processing' && (
-                <p>Transaction is processing... Please wait.</p>
-            )}
-            {state.status === 'success' && (
-                <div>
-                    <p className="font-bold">✅ Transaction Successful!</p>
-                    <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
-                        View on Aptos Explorer
-                    </a>
-                </div>
-            )}
-            {state.status === 'error' && (
-                <div>
-                    <p className="font-bold">❌ Transaction Failed</p>
-                    <p className="text-xs mt-1">{state.message}</p>
-                </div>
-            )}
-             <button onClick={onClear} className="text-xs text-gray-400 hover:text-white mt-2">[close]</button>
+  return (
+    <div className="mb-6 animate-fade-in">
+      {state.status === "processing" && (
+        <div className="p-4 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-5 w-5 text-accent animate-spin" />
+            <div>
+              <p className="font-semibold text-accent">Transaction Processing</p>
+              <p className="text-sm text-muted-foreground">Please wait while your transaction is confirmed...</p>
+            </div>
+          </div>
         </div>
-    );
-};
+      )}
 
-export default TransactionStatus;
+      {state.status === "success" && (
+        <div className="p-4 rounded-lg bg-success/10 border border-success/20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-success" />
+            <div>
+              <p className="font-semibold text-success">Transaction Successful!</p>
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-accent hover:underline"
+              >
+                View on Aptos Explorer →
+              </a>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClear}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {state.status === "error" && (
+        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <XCircle className="h-5 w-5 text-destructive" />
+            <div>
+              <p className="font-semibold text-destructive">Transaction Failed</p>
+              <p className="text-sm text-muted-foreground">{state.message || "An error occurred"}</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClear}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
