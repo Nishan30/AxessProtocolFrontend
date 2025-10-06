@@ -81,8 +81,8 @@ const HostDashboard = () => {
         setListing(data)
       }
     } catch (err: unknown) {
-      console.error("Failed to fetch host listing:", err)
-      setError((err as Error).message)
+      console.error("Failed to fetch host listing. Please make sure you have downloaded the agent and registered your host using this wallet's private key.", err)
+      setError("Please make sure you have downloaded the agent and registered your host using this wallet's private key.")
       setListing(null)
     } finally {
       setIsLoading(false)
