@@ -33,7 +33,7 @@ const HostDashboard = () => {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8000/api/v1"
   // This is the link to the .zip file of your agent hosted on GitHub Releases
-  const AGENT_DOWNLOAD_URL = "https://github.com/aniJani/oracleAgent/releases/download/AxessAgentv0.1/GPURentalHost.exe"
+  const AGENT_DOWNLOAD_URL = "https://github.com/aniJani/oracleAgent/releases/download/AxessAgentv0.2/Axess.Protocol.Agent.exe"
 
   useEffect(() => {
     if ("petra" in window) {
@@ -228,11 +228,11 @@ const HostDashboard = () => {
                       <div>
                         <h4 className="font-semibold">Download the Agent</h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Get the latest agent software for your OS. Unzip the folder to a permanent location on your machine.
+                          Get the latest agent software for your OS. 
                         </p>
                         <Button asChild>
                            <a href={AGENT_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer" className="gap-2">
-                            <Download className="w-4 h-4"/> Download Agent (.zip)
+                            <Download className="w-4 h-4"/> Download Agent (.exe)
                            </a>
                         </Button>
                       </div>
